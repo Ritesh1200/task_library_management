@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Borrow</title>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js">   </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <button id="logout_button" onclick="logout()" type="button" class="btn btn-primary">Logout</button>
+        <button id="books" onclick="window.location.replace('books.html');" type="button"
+            class="btn btn-primary">Books</button>
+        
+        <button id="add_book" onclick="window.location.replace('add_book.html');" type="button"
+            class="btn btn-primary">Add book</button>
+        <div id="user_email" style="float: right;"><script>
+            document.getElementById("user_email").innerHTML = localStorage.getItem("email")
+        </script></div>
+
+        <div>
+            <br>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Book</th>
+                        <th scope="col">Borrow date</th>
+                        <th scope="col">Return status</th>
+                        <th scope="col">Renew status</th>
+                        <th id="email_th" scope="col">Email</th>
+                    </tr>
+                </thead>
+                <tbody id="borrow_data">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        $(window).on('load', function () {
+            if (localStorage.getItem("email") == null) {
+                window.location.replace('login.html');
+            }
+            if (localStorage.getItem("is_librarian") != null) {
+                document.getElementById("email_th").style.display = "visible"
+                document.getElementById("add_book").style.display = "visible"
+            }
+            else {
+                document.getElementById("email_th").style.display = "none"
+                document.getElementById("add_book").style.display = "none"
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('email');
+            localStorage.removeItem('password');
+            localStorage.removeItem('is_librarian');
+            window.location.replace('books.html');
+        }
+
+        function renew_form_submit(borrow_id, renew) {
+            data = { "borrow_id": borrow_id, "renew": renew }
+            $.ajax({
+                type: 'PATCH',
+                url: "http://localhost:8000/book_management/renew/",
+                data: data,
+                headers: {
+                    "Authorization": "Basic " + btoa(localStorage.getItem('email') + ":" + localStorage.getItem('password'))
+                },
+                success: function (response) {
+                    location.reload();
+                },
+                error: function (response) {
+                    alert(response.responseJSON.error)
+                }
+            })
+        }
+        function borrow_return_submit(borrow_id) {
+            data = { "borrow_id": borrow_id }
+            $.ajax({
+                type: 'PATCH',
+                url: "http://localhost:8000/book_management/returned/",
+                data: data,
+                headers: {
+                    "Authorization": "Basic " + btoa(localStorage.getItem('email') + ":" + localStorage.getItem('password'))
+                },
+                success: function (response) {
+                    location.reload();
+                },
+                error: function (response) {
+                    alert(response.responseJSON.error)
+                }
+            })
+        }
+        $.ajax({
+            type: 'GET',
+            url: "http://localhost:8000/book_management/borrow_book/",
+            headers: {
+                "Authorization": "Basic " + btoa(localStorage.getItem('email') + ":" + localStorage.getItem('password'))
+            },
+            success: function (response) {
+                book_data = response
+                row = ""
+                console.log(response)
+                for (i = 0; i < response.length; i++) {
+                    row += "<tr>" +
+                        "<td>" + response[i].name + "</td>" +
+                        "<td>" + response[i].created_at + "</td>" +
+                        "<td>" + response[i].returned + "</td>" +
+                        "<td>" + response[i].renew + "</td>" 
+                    if (localStorage.getItem("is_librarian") != null) {
+                        row += "<td>" + response[i].email + "</td>"
+                    }
+                    row +="<td>" + '<form class="action-buttons-fixed mb-0">' +
+                        '<input type="hidden" id="renew" value=' + response[i].renew +
+                        'name="renew" class="form-control form-control-lg" required/>' +
+                        '<input type="hidden" id="borrow_id" value=' + response[i].id +
+                        'name="borrow_id" class="form-control form-control-lg" required/>' +
+                        '<button onclick="renew_form_submit(' + response[i].id + ',' + response[i].renew + ')" type="button" class="btn btn-primary" >Renew</button>' +
+                        '</form>' + "</td>"
+                    if (localStorage.getItem("is_librarian") != null) {
+                        row += "<td>" + '<form class="action-buttons-fixed mb-0">' +
+
+                            '<input type="hidden" id="book" value=' + response[i].id +
+                            'name="book" class="form-control form-control-lg" required/>' +
+                            '<button onclick="borrow_return_submit(' + response[i].id + ')" type="button" class="btn btn-danger" >Return</button>' +
+                            '</form>' + "</td>"
+                    }
+                    "</tr>"
+                }
+
+                $("#borrow_data").append(row);
+            },
+            error: function (response) {
+                console.log(response.responseJSON.data)
+            }
+        })
+
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add book</title>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js">   </script>
+</head>
+
+<body>
+    <br><br>
+    <section class="vh-100">
+        <div class="container-fluid h-custom">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-md-9 col-lg-6 col-xl-5">
+                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
+                        class="img-fluid" alt="Sample image">
+                </div>
+                <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
+                    <form class="action-buttons-fixed mb-0" id="add_book_form">
+                        <div class="form-outline mb-4">
+                            <input type="text" id="title" name="title" class="form-control form-control-lg"
+                                placeholder="Enter a title" required/>
+                            <label class="form-label" for="email">Title</label>
+                        </div>
+
+                        <div class="form-outline mb-4">
+                            <input type="text" id="author" name="author" class="form-control form-control-lg"
+                                placeholder="Enter author name" />
+                            <label class="form-label" for="author">Author name</label>
+                        </div>
+
+                        <div class="form-outline mb-3">
+                            <input type="text" id="description" name="description" class="form-control form-control-lg"
+                                placeholder="Enter description" />
+                            <label class="form-label" for="description">Description</label>
+                        </div>
+                        <div class="form-outline mb-3">
+                            <input type="number" id="available_copy" name="available_copy" class="form-control form-control-lg"
+                                placeholder="Enter available copy" required/>
+                            <label class="form-label" for="description">Available copy</label>
+                        </div>
+
+                        <div class="text-center text-lg-start mt-4 pt-2">
+                            <button type="submit" class="btn btn-primary btn-lg"
+                                style="padding-left: 2.5rem; padding-right: 2.5rem;">Add</button>
+                            <p class="small fw-bold mt-2 pt-1 mb-0" onclick="window.location.replace('books.html');">Back to book page
+                                    <a class="link-danger" style="cursor:pointer;">Books</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        $(window).on('load', function () {
+            if (localStorage.getItem("is_librarian") == null) {
+                window.location.replace('login.html');
+            }
+        });
+        $("#add_book_form").submit(function (e) {
+            console.log("this is console")
+            e.preventDefault();
+            var serializedData = $(this).serialize();
+            $.ajax({
+                type: 'POST',
+                url: "http://localhost:8000/book_management/book/",
+                headers: {
+                    "Authorization": "Basic " + btoa(localStorage.getItem('email') + ":" + localStorage.getItem('password'))
+                },
+                data: serializedData,
+                success: function (response) {
+                    window.location.replace('books.html');
+                },
+                error: function (response) {
+                    console.log(response.responseJSON)
+                    alert(response.responseJSON.error)
+                    
+                }
+            })
+        })
+    </script>
+</body>
+
+</html>
